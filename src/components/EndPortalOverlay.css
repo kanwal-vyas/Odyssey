@@ -1,0 +1,78 @@
+/*
+ * EndPortalOverlay.css
+ *
+ * Light-expansion flash transition — plays when the user clicks the
+ * horizon sun/moon to begin again.
+ *
+ * Technique: clip-path circle() expands from the viewport's visual
+ * "horizon" area (center-x, 45% y) outward, simulating the sun/moon
+ * growing to fill the world with light.
+ *
+ * Two palettes:
+ *   [data-dark="false"]  →  warm white / golden (day)
+ *   [data-dark="true"]   →  cool blue-white / silver (night)
+ */
+
+.portal-flash {
+  /* Always present in the DOM — invisible until .portal-flash--active */
+  position: fixed;
+  inset: 0;
+  z-index: 9998;       /* below Intro (9999) but above everything else */
+  pointer-events: none;
+  opacity: 0;
+  will-change: clip-path, opacity;
+}
+
+/* ── Day: warm golden-white ────────────────────────────────── */
+.portal-flash[data-dark="false"] {
+  background: radial-gradient(
+    ellipse 120% 120% at 50% 45%,
+    #fffdf5 0%,
+    #fff8e0 35%,
+    #ffe8a0 65%,
+    #ffcc66 100%
+  );
+}
+
+/* ── Night: cool blue-silver ───────────────────────────────── */
+.portal-flash[data-dark="true"] {
+  background: radial-gradient(
+    ellipse 120% 120% at 50% 45%,
+    #f4f8ff 0%,
+    #e0ecff 35%,
+    #b8d0ff 65%,
+    #8099ee 100%
+  );
+}
+
+/* ── Active state ──────────────────────────────────────────── */
+.portal-flash--active {
+  animation: portalFlashExpand 0.88s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/*
+  The clip-path starts as a tiny circle at the horizon point
+  (50% x, 45% y — roughly where the sun/moon appears on screen)
+  and expands to 160% radius, which covers even ultra-wide screens.
+
+  Phase 1 (0–15%):  circle appears, opacity rises — the "birth" of light
+  Phase 2 (15–80%): rapid expansion — the light rushes toward viewer
+  Phase 3 (80–100%): settles into full solid fill, slight opacity ease
+*/
+@keyframes portalFlashExpand {
+  0% {
+    clip-path: circle(0% at 50% 45%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  55% {
+    clip-path: circle(75% at 50% 45%);
+    opacity: 1;
+  }
+  100% {
+    clip-path: circle(160% at 50% 45%);
+    opacity: 1;
+  }
+}
