@@ -78,6 +78,7 @@ export default function App() {
   const [journeyComplete, setJourneyComplete] = useState(false)
   const [journeyCardKey, setJourneyCardKey] = useState(null)
   const journeyReachedRef = useRef(false)
+  const lastLoreBiomeRef = useRef(null)
 
   // ── Music ──────────────────────────────────────────────────────────
   const [musicOn, setMusicOn] = useState(false)
@@ -90,6 +91,13 @@ export default function App() {
   }, [musicOn, toggleMusic])
 
   const handleBiomeChange = useCallback((index) => {
+    if (lastLoreBiomeRef.current === index) {
+      setActiveBiome(index)
+      if (musicOn) setMusicBiome(index)
+      return
+    }
+
+    lastLoreBiomeRef.current = index
     setActiveBiome(index)
     setLoreKey(prev => (prev ?? 0) + 1)
     if (musicOn) setMusicBiome(index)
@@ -119,6 +127,7 @@ export default function App() {
       }
       setActiveBiome(0)
       setLoreKey(null)
+      lastLoreBiomeRef.current = null
       setJourneyComplete(false)
       setJourneyCardKey(null)
       journeyReachedRef.current = false

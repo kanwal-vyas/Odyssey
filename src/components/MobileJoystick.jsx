@@ -1,8 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 
 const OUTER_SIZE = 132
 const MAX_THROW = 36
-const DEAD_ZONE = 0.14
+const RADIAL_DEAD_ZONE = 0.24
+const LATERAL_DEAD_ZONE = 0.34
+const FORWARD_DEAD_ZONE = 0.24
+const LATERAL_RESPONSE_EXPONENT = 1.95
+const FORWARD_RESPONSE_EXPONENT = 1.6
+const LATERAL_MAX_OUTPUT = 0.42
+const FORWARD_MAX_OUTPUT = 0.68
 
 function clampStick(x, y) {
   const length = Math.hypot(x, y)
@@ -11,7 +17,25 @@ function clampStick(x, y) {
   return { x: x * scale, y: y * scale }
 }
 
-export default function MobileJoystick({ inputRef }) {
+function applyStickResponse(x, y) {
+  const magnitude = Math.hypot(x, y)
+  if (magnitude < RADIAL_DEAD_ZONE) return { dx: 0, dz: 0 }
+
+  const remapAxis = (value, deadZone, exponent, maxOutput) => {
+    const absValue = Math.abs(value)
+    if (absValue < deadZone) return 0
+    const liveValue = (absValue - deadZone) / (1 - deadZone)
+    return Math.sign(value) * Math.pow(liveValue, exponent) * maxOutput
+  }
+
+  return {
+    // Make small horizontal drift much less likely to trigger turning.
+    dx: -remapAxis(x, LATERAL_DEAD_ZONE, LATERAL_RESPONSE_EXPONENT, LATERAL_MAX_OUTPUT),
+    dz: -remapAxis(y, FORWARD_DEAD_ZONE, FORWARD_RESPONSE_EXPONENT, FORWARD_MAX_OUTPUT),
+  }
+}
+
+function MobileJoystick({ inputRef }) {
   const padRef = useRef(null)
   const activePointerIdRef = useRef(null)
   const [active, setActive] = useState(false)
@@ -39,9 +63,7 @@ export default function MobileJoystick({ inputRef }) {
     const next = clampStick(localX, localY)
     const normalizedX = next.x / MAX_THROW
     const normalizedY = next.y / MAX_THROW
-    const magnitude = Math.hypot(normalizedX, normalizedY)
-    const dx = magnitude < DEAD_ZONE ? 0 : -normalizedX
-    const dz = magnitude < DEAD_ZONE ? 0 : -normalizedY
+    const { dx, dz } = applyStickResponse(normalizedX, normalizedY)
 
     setThumb(next)
 
@@ -108,3 +130,5 @@ export default function MobileJoystick({ inputRef }) {
     </div>
   )
 }
+
+export default memo(MobileJoystick)

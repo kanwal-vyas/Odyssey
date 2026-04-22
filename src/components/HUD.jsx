@@ -90,12 +90,19 @@ export default function HUD({ zoneRefs, theme, setTheme, musicOn, onMusicToggle,
   const navRef = useRef(null)
   const [isMobileLayout, setIsMobileLayout] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [desktopNavOpen, setDesktopNavOpen] = useState(false)
+  const [desktopHoverSuppressed, setDesktopHoverSuppressed] = useState(false)
 
   useEffect(() => {
     const updateLayout = () => {
       const nextMobile = window.matchMedia('(max-width: 860px), (pointer: coarse)').matches
       setIsMobileLayout(nextMobile)
-      if (!nextMobile) setMobileNavOpen(false)
+      if (nextMobile) {
+        setDesktopNavOpen(false)
+        setDesktopHoverSuppressed(false)
+      } else {
+        setMobileNavOpen(false)
+      }
     }
 
     updateLayout()
@@ -130,6 +137,10 @@ export default function HUD({ zoneRefs, theme, setTheme, musicOn, onMusicToggle,
 
     onSelectBiome?.(index)
     if (isMobileLayout) setMobileNavOpen(false)
+    else {
+      setDesktopNavOpen(false)
+      setDesktopHoverSuppressed(true)
+    }
   }
 
   return (
@@ -155,26 +166,36 @@ export default function HUD({ zoneRefs, theme, setTheme, musicOn, onMusicToggle,
         <MusicToggle musicOn={musicOn} onToggle={onMusicToggle} />
       </div>
 
-      <nav
+      <aside
         ref={navRef}
-        className={`hud-nav${mobileNavOpen ? ' mobile-open' : ''}`}
-        aria-label="World zones"
+        className={`hud-biome-panel${mobileNavOpen || desktopNavOpen ? ' open' : ''}${isMobileLayout ? ' mobile' : ''}${desktopHoverSuppressed ? ' hover-suppressed' : ''}`}
+        onPointerEnter={() => {
+          if (!isMobileLayout && !desktopHoverSuppressed) setDesktopNavOpen(true)
+        }}
+        onPointerLeave={() => {
+          if (!isMobileLayout) {
+            setDesktopNavOpen(false)
+            setDesktopHoverSuppressed(false)
+          }
+        }}
       >
-        {BIOMES.map((b, i) => (
-          <button
-            key={i}
-            type="button"
-            className="hud-zone"
-            data-index={i}
-            onClick={() => handleZonePress(i)}
-            ref={el => { zoneRefs.current[i] = el }}
-          >
-            <span className="hud-zone-roman">{b.roman}</span>
-            <span className="hud-zone-line" />
-            <span className="hud-zone-name">{b.name}</span>
-          </button>
-        ))}
-      </nav>
+        <nav className="hud-biome-list" aria-label="World zones">
+          {BIOMES.map((b, i) => (
+            <button
+              key={i}
+              type="button"
+              className={`hud-zone${i === activeBiome ? ' active' : ''}`}
+              data-index={i}
+              onClick={() => handleZonePress(i)}
+              ref={el => { zoneRefs.current[i] = el }}
+            >
+              <span className="hud-zone-name">{b.name}</span>
+              <span className="hud-zone-roman">{b.roman}</span>
+              <span className="hud-zone-dot" aria-hidden="true" />
+            </button>
+          ))}
+        </nav>
+      </aside>
 
       <div className={`hud-footer${isMobileLayout ? ' mobile-layout' : ''}`}>
         <BiomeCompass activeBiome={activeBiome} compact={isMobileLayout} />
