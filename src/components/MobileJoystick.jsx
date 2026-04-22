@@ -18,10 +18,11 @@ export default function MobileJoystick({ inputRef }) {
   const [thumb, setThumb] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
+    const controls = inputRef?.current
     return () => {
-      if (inputRef?.current) {
-        inputRef.current.dx = 0
-        inputRef.current.dz = 0
+      if (controls) {
+        controls.dx = 0
+        controls.dz = 0
       }
     }
   }, [inputRef])
@@ -77,7 +78,7 @@ export default function MobileJoystick({ inputRef }) {
     if (event.pointerId !== activePointerIdRef.current) return
     try {
       event.currentTarget.releasePointerCapture(event.pointerId)
-    } catch (_) {}
+    } catch { /* pointer capture may already be released */ }
     resetStick()
   }
 

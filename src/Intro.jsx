@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import './intro.css'
 
 function getInitialTheme() {
   try {
     const stored = localStorage.getItem('odyssey-theme')
     if (stored === 'light' || stored === 'dark') return stored
-  } catch (_) {}
+  } catch { /* ignore storage read errors */ }
 
   if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark'
   return 'dark'
@@ -32,14 +32,14 @@ function IntroMusicToggle({ musicOn, onToggle }) {
   )
 }
 
-export default function Intro({ onEnter, onSkip, onThemeChange, musicOn = false, onMusicToggle }) {
+export default function Intro({ onEnter, onThemeChange, musicOn = false, onMusicToggle }) {
   const [theme, setTheme]     = useState(getInitialTheme)
   const [leaving, setLeaving] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    try { localStorage.setItem('odyssey-theme', theme) } catch (_) {}
+    try { localStorage.setItem('odyssey-theme', theme) } catch { /* ignore storage write errors */ }
     onThemeChange?.(theme)
   }, [theme, onThemeChange])
 
@@ -159,23 +159,4 @@ export default function Intro({ onEnter, onSkip, onThemeChange, musicOn = false,
       </footer>
     </div>
   )
-}
-
-export function useTheme() {
-  const [theme, setTheme] = useState(
-    () => document.documentElement.dataset.theme || 'dark'
-  )
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setTheme(document.documentElement.dataset.theme || 'dark')
-    })
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    })
-    return () => observer.disconnect()
-  }, [])
-
-  return theme
 }

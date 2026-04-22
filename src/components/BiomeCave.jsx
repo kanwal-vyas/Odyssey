@@ -10,9 +10,11 @@ const FULL_RADIUS = 3.5
 const _charPos = new THREE.Vector3()
 const _crystPos = new THREE.Vector3()
 
-export default function BiomeCave({ origin, isDark = true, charPosRef }) {
+export default function BiomeCave({ origin, isDark = true, charPosRef, quality = 'medium' }) {
   const ox = origin?.x ?? 0
   const oz = origin?.z ?? -110
+  const isLowQuality = quality === 'low'
+  const isMediumQuality = quality === 'medium'
 
   const isDarkRef = useRef(isDark)
   isDarkRef.current = isDark
@@ -152,6 +154,7 @@ export default function BiomeCave({ origin, isDark = true, charPosRef }) {
   return (
     <group>
       {props.groundCrystals.map((c, i) => (
+        (!isLowQuality || i < 80) && (!isMediumQuality || i < 104) && (
         <mesh
           key={`gc-${i}`}
           position={[c.position[0], c.h / 2, c.position[2]]}
@@ -169,9 +172,11 @@ export default function BiomeCave({ origin, isDark = true, charPosRef }) {
             opacity={isDark ? 0.12 : 0.92}
           />
         </mesh>
+        )
       ))}
 
       {props.ceilCrystals.map((c, i) => (
+        (!isLowQuality || i < 14) && (!isMediumQuality || i < 20) && (
         <mesh
           key={`cc-${i}`}
           position={[c.position[0], CEILING_H - c.h / 2, c.position[2]]}
@@ -189,6 +194,7 @@ export default function BiomeCave({ origin, isDark = true, charPosRef }) {
             opacity={isDark ? 0.22 : 0.84}
           />
         </mesh>
+        )
       ))}
 
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[ox, CEILING_H, oz - 30]}>
@@ -281,6 +287,7 @@ export default function BiomeCave({ origin, isDark = true, charPosRef }) {
       ))}
 
       {props.clusterLights.map((l, i) => (
+        (!isLowQuality || i < 5) && (!isMediumQuality || i < 7) && (
         <pointLight
           key={`cl-${i}`}
           position={l.pos}
@@ -288,6 +295,7 @@ export default function BiomeCave({ origin, isDark = true, charPosRef }) {
           color={l.color}
           distance={32}
         />
+        )
       ))}
       <pointLight
         position={[ox, 6, oz - 30]}
@@ -297,16 +305,16 @@ export default function BiomeCave({ origin, isDark = true, charPosRef }) {
       />
 
       <Sparkles
-        count={isDark ? 60 : 150}
+        count={isLowQuality ? (isDark ? 26 : 54) : isMediumQuality ? (isDark ? 42 : 96) : (isDark ? 60 : 150)}
         scale={[34, CEILING_H * 0.7, 60]}
         position={[ox, CEILING_H * 0.4, oz - 30]}
-        size={3.5}
+        size={isLowQuality ? 2.4 : 3.5}
         speed={0.06}
         color="#60a8d0"
         opacity={isDark ? 0.52 : 0.9}
       />
       <Sparkles
-        count={isDark ? 25 : 60}
+        count={isLowQuality ? (isDark ? 10 : 22) : isMediumQuality ? (isDark ? 16 : 40) : (isDark ? 25 : 60)}
         scale={[20, 4, 50]}
         position={[ox, 1, oz - 30]}
         size={2}

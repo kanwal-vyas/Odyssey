@@ -109,7 +109,7 @@ function Jellyfish({ position, color, charPosRef, isDarkRef }) {
 // Coral — multi-cone cluster
 function Coral({ position, color, height }) {
   const spikes = useMemo(() =>
-    Array.from({ length: 6 + Math.floor(Math.random() * 5) }, (_, i) => ({
+    Array.from({ length: 6 + Math.floor(Math.random() * 5) }, () => ({
       x: (Math.random() - 0.5) * 0.8,
       z: (Math.random() - 0.5) * 0.8,
       h: height * (0.4 + Math.random() * 0.6),
@@ -129,7 +129,7 @@ function Coral({ position, color, height }) {
 }
 
 // Kelp strand — swaying tall cylinder
-function Kelp({ position, height, isDarkRef }) {
+function Kelp({ position, height }) {
   const meshRef = useRef()
   const phase   = useRef(Math.random() * Math.PI * 2)
 
@@ -202,9 +202,11 @@ function GlowVent({ position, color, charPosRef, isDarkRef }) {
   )
 }
 
-export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
+export default function BiomeOcean({ origin, isDark = true, charPosRef, quality = 'medium' }) {
   const ox = origin?.x ?? 0
   const oz = origin?.z ?? -330
+  const isLowQuality = quality === 'low'
+  const isMediumQuality = quality === 'medium'
 
   const isDarkRef = useRef(isDark)
   isDarkRef.current = isDark
@@ -272,9 +274,8 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
     })
 
     // ── Bubble streams — animate position ─────────────────────────
-    bubbleRefs.current.forEach((group, i) => {
+    bubbleRefs.current.forEach((group) => {
       if (!group) return
-      const stream = props.bubbleStreams[i]
       group.children.forEach((bubble, j) => {
         const speed = 0.8 + j * 0.15
         const y = ((t * speed + j * 1.5) % 12)
@@ -312,6 +313,7 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
 
       {/* ── God rays (light columns from above) ── */}
       {props.godRays.map((ray, i) => (
+        (!isLowQuality || i < 4) && (!isMediumQuality || i < 6) && (
         <mesh key={`ray-${i}`}
           ref={el => { godRayRefs.current[i] = el }}
           position={ray.position}
@@ -326,20 +328,26 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
             side={THREE.DoubleSide}
           />
         </mesh>
+        )
       ))}
 
       {/* ── Kelp forest ── */}
       {props.kelp.map((k, i) => (
-        <Kelp key={`kelp-${i}`} position={k.position} height={k.height} isDarkRef={isDarkRef} />
+        (!isLowQuality || i < 16) && (!isMediumQuality || i < 22) && (
+        <Kelp key={`kelp-${i}`} position={k.position} height={k.height} />
+        )
       ))}
 
       {/* ── Coral formations ── */}
       {props.corals.map((c, i) => (
+        (!isLowQuality || i < 14) && (!isMediumQuality || i < 18) && (
         <Coral key={`coral-${i}`} position={c.position} color={c.color} height={c.height} />
+        )
       ))}
 
       {/* ── Jellyfish ── */}
       {props.jellyfish.map((j, i) => (
+        (!isLowQuality || i < 8) && (!isMediumQuality || i < 12) && (
         <Jellyfish
           key={`jelly-${i}`}
           position={j.position}
@@ -347,10 +355,12 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
           charPosRef={charPosRef}
           isDarkRef={isDarkRef}
         />
+        )
       ))}
 
       {/* ── Bubble streams ── */}
       {props.glowVents.map((g, i) => (
+        (!isLowQuality || i < 5) && (
         <GlowVent
           key={`glow-vent-${i}`}
           position={g.position}
@@ -358,14 +368,16 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
           charPosRef={charPosRef}
           isDarkRef={isDarkRef}
         />
+        )
       ))}
 
       {props.bubbleStreams.map((stream, i) => (
+        (!isLowQuality || i < 5) && (!isMediumQuality || i < 7) && (
         <group key={`bubbles-${i}`}
           ref={el => { bubbleRefs.current[i] = el }}
           position={[stream.x, 0, stream.z]}
         >
-          {Array.from({ length: 8 }, (_, j) => (
+          {Array.from({ length: isLowQuality ? 5 : isMediumQuality ? 6 : 8 }, (_, j) => (
             <mesh key={j} position={[
               (Math.random() - 0.5) * 0.4,
               j * 1.5,
@@ -376,6 +388,7 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
             </mesh>
           ))}
         </group>
+        )
       ))}
 
       {/* ── Anglerfish lure (dangling glowing orb) ── */}
@@ -395,15 +408,17 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
 
       {/* ── Background rocks ── */}
       {props.bgRocks.map((r, i) => (
+        (!isLowQuality || i < 8) && (
         <mesh key={`bgr-${i}`} position={r.position} scale={r.scale}>
           <dodecahedronGeometry args={[0.5, 0]} />
           <meshStandardMaterial color={isDark ? '#030a10' : '#041420'} roughness={1} flatShading />
         </mesh>
+        )
       ))}
 
       {/* ── Bioluminescent particle field ── */}
       <Sparkles
-        count={isDark ? 110 : 55}
+        count={isLowQuality ? (isDark ? 42 : 24) : isMediumQuality ? (isDark ? 72 : 36) : (isDark ? 110 : 55)}
         scale={[52, 16, 68]}
         position={[ox, 6, oz - 35]}
         size={isDark ? 2.5 : 1.5}
@@ -412,7 +427,7 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
         opacity={isDark ? 0.7 : 0.3}
       />
       <Sparkles
-        count={36}
+        count={isLowQuality ? 16 : isMediumQuality ? 24 : 36}
         scale={[40, 4, 55]}
         position={[ox, 1, oz - 35]}
         size={1.8}
@@ -422,7 +437,7 @@ export default function BiomeOcean({ origin, isDark = true, charPosRef }) {
       />
 
       {/* ── Volumetric water planes ── */}
-      {Array.from({ length: 6 }, (_, i) => (
+      {Array.from({ length: isLowQuality ? 3 : isMediumQuality ? 4 : 6 }, (_, i) => (
         <mesh key={`water-${i}`} rotation={[-Math.PI / 2, 0, 0]}
           position={[ox + (i - 3) * 8, 0.5 + i * 1.5, oz - 25 - i * 5]}>
           <planeGeometry args={[60, 55]} />

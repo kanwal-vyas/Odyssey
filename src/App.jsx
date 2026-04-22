@@ -12,6 +12,7 @@ import EndPortalOverlay from './components/EndPortalOverlay'
 import MobileJoystick from './components/MobileJoystick'
 import { getInitialTheme, applyTheme } from './hooks/useTheme'
 import { useAmbientMusic } from './hooks/useAmbientMusic'
+import { useDeviceProfile } from './hooks/useDeviceProfile'
 
 function useStringTune(progressRef) {
   useEffect(() => {
@@ -34,7 +35,7 @@ function useStringTune(progressRef) {
             const tick = () => {
               if (cancelled) return
               if (progressRef?.current != null) {
-                try { instance.setProgress(progressRef.current) } catch (_) {}
+                try { instance.setProgress(progressRef.current) } catch { /* ignore StringTune progress errors */ }
               }
               rafId = requestAnimationFrame(tick)
             }
@@ -47,13 +48,14 @@ function useStringTune(progressRef) {
     return () => {
       cancelled = true
       if (rafId != null) cancelAnimationFrame(rafId)
-      try { instance?.destroy?.() } catch (_) {}
+      try { instance?.destroy?.() } catch { /* ignore StringTune cleanup errors */ }
       document.getElementById('string-tune-sentinel')?.remove()
     }
-  }, [])
+  }, [progressRef])
 }
 
 export default function App() {
+  const deviceProfile = useDeviceProfile()
   const progressBarRef  = useRef(null)
   const zoneRefs        = useRef([])
   const progressRef     = useRef(0)
@@ -165,12 +167,19 @@ export default function App() {
 
   useStringTune(progressRef)
 
+  const dprRange = (
+    deviceProfile.quality === 'low'
+      ? [0.7, 0.9]
+      : deviceProfile.quality === 'medium'
+        ? [0.78, 1]
+        : [0.85, 1.15]
+  )
+
   return (
     <>
       {!introUnmounted && (
         <Intro
           onEnter={handleIntroEnter}
-          onSkip={handleIntroEnter}
           onThemeChange={handleThemeChange}
           musicOn={musicOn}
           onMusicToggle={handleMusicToggle}
@@ -213,7 +222,7 @@ export default function App() {
 
       <div className="canvas-wrapper">
         <Canvas
-          dpr={[0.85, 1.15]}
+          dpr={dprRange}
           frameloop="always"
           camera={{ position: [0, 4.5, 18], fov: 55, near: 0.1, far: 800 }}
           gl={{
@@ -226,7 +235,8 @@ export default function App() {
             toneMapping: THREE.NoToneMapping,
           }}
           onCreated={({ gl }) => {
-            gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.15))
+            const maxDpr = dprRange[1]
+            gl.setPixelRatio(Math.min(window.devicePixelRatio, maxDpr))
           }}
         >
           {/* key={theme} REMOVED — it was destroying/remounting the entire
@@ -238,10 +248,12 @@ export default function App() {
             charPosRef={charPosRef}
             charRotYRef={charRotYRef}
             isDark={isDark}
+            activeBiome={activeBiome}
             onBiomeChange={handleBiomeChange}
             onBeginAgain={handleBeginAgain}
             isJourneyComplete={journeyComplete}
             virtualInputRef={virtualInputRef}
+            quality={deviceProfile.quality}
           />
         </Canvas>
       </div>

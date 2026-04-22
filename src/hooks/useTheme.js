@@ -6,9 +6,6 @@ export function useTheme() {
   )
 
   useEffect(() => {
-    // Sync immediately in case it changed before mount
-    setTheme(document.documentElement.dataset.theme || 'dark')
-
     const observer = new MutationObserver(() => {
       setTheme(document.documentElement.dataset.theme || 'dark')
     })
@@ -25,14 +22,14 @@ export function useTheme() {
 /** Toggle helper — call from anywhere */
 export function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme)
-  try { localStorage.setItem('odyssey-theme', theme) } catch (_) {}
+  try { localStorage.setItem('odyssey-theme', theme) } catch { /* ignore storage write errors */ }
 }
 
 export function getInitialTheme() {
   try {
     const stored = localStorage.getItem('odyssey-theme')
     if (stored === 'light' || stored === 'dark') return stored
-  } catch (_) {}
+  } catch { /* ignore storage read errors */ }
   if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) return 'dark'
   return 'dark'
 }

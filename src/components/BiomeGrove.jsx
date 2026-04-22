@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Float, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 import { Tree, Rock, Bush, Waterfall, Lake } from './Primitives'
@@ -67,9 +67,11 @@ function PathOrb({ position, isDark }) {
   )
 }
 
-export default function BiomeGrove({ origin, isDark = true, charPosRef }) {
+export default function BiomeGrove({ origin, isDark = true, charPosRef, quality = 'medium' }) {
   const cx = origin?.x ?? 0
   const cz = origin?.z ?? 0
+  const isLowQuality = quality === 'low'
+  const isMediumQuality = quality === 'medium'
 
   // ── Geometry computed once — no isDark dependency ─────────────────
   // Colors that depend on isDark are applied as props below, avoiding
@@ -163,16 +165,24 @@ export default function BiomeGrove({ origin, isDark = true, charPosRef }) {
       ))}
 
       {props.bgTrees.map((t, i) => (
+        (!isLowQuality || i < 24) && (
         <Tree key={`bg-${i}`} {...t} color={isDark ? t.colorDark : t.colorLight} />
+        )
       ))}
       {props.trees.map((t, i) => (
+        (!isLowQuality || i < 92) && (!isMediumQuality || i < 116) && (
         <Tree key={`tree-${i}`} {...t} color={isDark ? t.colorDark : t.colorLight} />
+        )
       ))}
       {props.rocks.map((r, i) => (
+        (!isLowQuality || i < 18) && (
         <Rock key={`rock-${i}`} {...r} color={isDark ? r.colorDark : r.colorLight} />
+        )
       ))}
       {props.bushes.map((b, i) => (
+        (!isLowQuality || i < 28) && (
         <Bush key={`bush-${i}`} {...b} color={isDark ? b.colorDark : b.colorLight} />
+        )
       ))}
 
       {/* ── Water features ── */}
@@ -186,6 +196,8 @@ export default function BiomeGrove({ origin, isDark = true, charPosRef }) {
       {props.fireflies.map((f, i) => {
         // Only render 28 in light mode visually — skip every other beyond 28
         if (!isDark && i >= 28) return null
+        if (isLowQuality && i >= 20) return null
+        if (isMediumQuality && i >= 34) return null
         return (
           <Float key={`ff-${i}`} speed={f.speed} floatIntensity={1.4} position={f.pos}>
             <mesh>
@@ -216,6 +228,7 @@ export default function BiomeGrove({ origin, isDark = true, charPosRef }) {
 
       {/* ── Mushrooms ── */}
       {props.mushrooms.map((m, i) => (
+        (!isLowQuality || i < 16) && (
         <Mushroom
           key={`mush-${i}`}
           position={m.position}
@@ -223,6 +236,7 @@ export default function BiomeGrove({ origin, isDark = true, charPosRef }) {
           charPosRef={charPosRef}
           isDark={isDark}
         />
+        )
       ))}
 
       {/* ── Vines ── */}
@@ -235,18 +249,21 @@ export default function BiomeGrove({ origin, isDark = true, charPosRef }) {
 
       {/* ── Flowers — light mode only ── */}
       {!isDark && props.flowers.map((f, i) => (
+        (!isLowQuality || i < 30) && (
         <mesh key={`flower-${i}`} position={f.position} rotation={[-Math.PI / 2, 0, f.rot]}>
           <circleGeometry args={[f.size, 6]} />
           <meshBasicMaterial color={f.color} />
         </mesh>
+        )
       ))}
 
       {/* ── Sparkles — light mode only ── */}
       {!isDark && (
         <>
-          <Sparkles count={120} scale={[42, 12, 92]} position={[cx, 4, cz - 45]}
-            size={1.8} speed={0.18} color="#9acc60" opacity={0.5} />
-          <Sparkles count={60} scale={[30, 6, 80]} position={[cx, 1.5, cz - 45]}
+          <Sparkles scale={[42, 12, 92]} position={[cx, 4, cz - 45]}
+            size={isLowQuality ? 1.2 : 1.8} speed={0.18} color="#9acc60" opacity={0.5}
+            count={isLowQuality ? 44 : isMediumQuality ? 72 : 120} />
+          <Sparkles count={isLowQuality ? 20 : isMediumQuality ? 36 : 60} scale={[30, 6, 80]} position={[cx, 1.5, cz - 45]}
             size={1.2} speed={0.28} color="#d0f090" opacity={0.3} />
         </>
       )}
@@ -255,10 +272,10 @@ export default function BiomeGrove({ origin, isDark = true, charPosRef }) {
       {!isDark && (
         <>
           <pointLight position={[cx, 2.5, cz - 10]}  intensity={2.0} color="#90d050" distance={28} />
-          <pointLight position={[cx - 9, 1, cz - 28]} intensity={1.4} color="#c8e890" distance={20} />
-          <pointLight position={[cx + 12, 1.5, cz - 50]} intensity={1.2} color="#a0cc60" distance={22} />
-          <pointLight position={[cx - 6, 1, cz - 70]}  intensity={1.6} color="#80c040" distance={24} />
-          <pointLight position={[cx + 8, 2, cz - 85]}  intensity={1.0} color="#c0e870" distance={18} />
+          {!isLowQuality && <pointLight position={[cx - 9, 1, cz - 28]} intensity={1.4} color="#c8e890" distance={20} />}
+          {!isLowQuality && <pointLight position={[cx + 12, 1.5, cz - 50]} intensity={1.2} color="#a0cc60" distance={22} />}
+          {!isMediumQuality && <pointLight position={[cx - 6, 1, cz - 70]}  intensity={1.6} color="#80c040" distance={24} />}
+          {!isMediumQuality && <pointLight position={[cx + 8, 2, cz - 85]}  intensity={1.0} color="#c0e870" distance={18} />}
         </>
       )}
     </group>

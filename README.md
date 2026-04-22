@@ -82,8 +82,48 @@ odyssey-website/
 
 ### Dev Dependencies
 
-Using Vite 5 + `@vitejs/plugin-react` v4 to avoid peer-dep conflicts with React 18.
-The original `package.json` used Vite 8 and `@types/react` v19 which conflict with React 18.
+The project is currently locked to Vite 8 and `@vitejs/plugin-react` v6.
+Node.js 20.19+ is required by Vite 8, and the repository includes a `.node-version`
+file to make hosted builds deterministic.
+
+---
+
+## Deployment
+
+### Recommended host: Cloudflare Pages
+
+This project is a static Vite build with no backend runtime, so it deploys cleanly to
+Cloudflare Pages using Git integration.
+
+Recommended settings:
+
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Production branch: `main`
+
+The repo also includes `public/_headers` so Cloudflare Pages can:
+
+- revalidate the HTML entry on each navigation
+- cache fingerprinted assets in `/assets/` aggressively for repeat visitors
+- keep updates safe when you push new builds
+
+The repository also includes `wrangler.toml` with:
+
+- `name = "odyssey-website"`
+- `pages_build_output_dir = "./dist"`
+- `compatibility_date = "2026-04-22"`
+
+This makes the Pages build output explicit in-repo. If you use this Wrangler file for
+deployment, it becomes the source of truth for compatible Cloudflare Pages settings.
+
+### Launch sequence
+
+1. Push the repository to GitHub.
+2. In Cloudflare Dashboard, create a new Pages project from Git.
+3. Select the repository and set the production branch to `main`.
+4. Confirm the build command is `npm run build` and the output directory is `dist`.
+5. Open the preview deployment and run a full playthrough on desktop and mobile.
+6. Promote or merge to `main` once the preview run looks correct.
 
 ---
 

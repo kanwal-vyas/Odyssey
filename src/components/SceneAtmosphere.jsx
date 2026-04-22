@@ -37,7 +37,13 @@ export { BIOMES }
 const _c1 = new THREE.Color()
 const _c2 = new THREE.Color()
 
-export default function SceneAtmosphere({ progressRef, isDark, onBiomeChange, isJourneyComplete = false }) {
+export default function SceneAtmosphere({
+  progressRef,
+  isDark,
+  quality = 'medium',
+  onBiomeChange,
+  isJourneyComplete = false,
+}) {
   const { scene } = useThree()
   const ambRef = useRef()
   const lastBiomeRef = useRef(-1)
@@ -103,6 +109,16 @@ export default function SceneAtmosphere({ progressRef, isDark, onBiomeChange, is
   })
 
   const init = isDark ? BIOMES[0].dark : BIOMES[0].light
+  const starCount = quality === 'low'
+    ? (isDark ? 1100 : 350)
+    : quality === 'medium'
+      ? (isDark ? 1800 : 650)
+      : (isDark ? 2600 : 900)
+  const starFactor = quality === 'low'
+    ? (isDark ? 4.2 : 2.2)
+    : quality === 'medium'
+      ? (isDark ? 5 : 2.6)
+      : (isDark ? 6 : 3)
 
   return (
     <>
@@ -111,8 +127,7 @@ export default function SceneAtmosphere({ progressRef, isDark, onBiomeChange, is
       {!isDark ? (
         <>
           <directionalLight position={[0, 10, 10]}  intensity={4}   color="#ffffff" />
-          <directionalLight position={[10, 18, 5]}  intensity={1.6} castShadow
-            shadow-mapSize={[1024, 1024]} shadow-camera-far={200} />
+          <directionalLight position={[10, 18, 5]} intensity={1.6} />
         </>
       ) : (
         <directionalLight position={[20, 30, 10]} intensity={0.12} color="#8090c0" />
@@ -121,11 +136,11 @@ export default function SceneAtmosphere({ progressRef, isDark, onBiomeChange, is
       <Stars
         radius={180}
         depth={80}
-        count={isDark ? 2600 : 900}
-        factor={isDark ? 6 : 3}
+        count={starCount}
+        factor={starFactor}
         saturation={0}
         fade
-        speed={isDark ? 0.22 : 0.12}
+        speed={quality === 'low' ? (isDark ? 0.16 : 0.08) : (isDark ? 0.22 : 0.12)}
       />
     </>
   )

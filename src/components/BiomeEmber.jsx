@@ -27,10 +27,9 @@ const erng = () => {
 }
 
 // Geyser — erupts on a timer, shoots upward sparks
-function Geyser({ position, isDarkRef }) {
+function Geyser({ position }) {
   const pillarRef   = useRef()
   const lightRef    = useRef()
-  const eruptRef    = useRef(0)
   const phase       = useRef(Math.random() * 20)
   const ERUPT_EVERY = 8 + Math.random() * 6
 
@@ -157,9 +156,17 @@ function EmberVein({ position, rotation, charPosRef, isDarkRef }) {
   )
 }
 
-export default function BiomeEmber({ origin, isDark = true, charPosRef, cliffEdgeZ = -356 }) {
+export default function BiomeEmber({
+  origin,
+  isDark = true,
+  charPosRef,
+  cliffEdgeZ = -356,
+  quality = 'medium',
+}) {
   const ox = origin?.x ?? 0
   const oz = origin?.z ?? -440
+  const isLowQuality = quality === 'low'
+  const isMediumQuality = quality === 'medium'
   const emberStartZ = oz + 5
   const emberEndZ = cliffEdgeZ
   const emberDepth = Math.max(12, emberStartZ - emberEndZ)
@@ -247,7 +254,7 @@ export default function BiomeEmber({ origin, isDark = true, charPosRef, cliffEdg
     const t = clock.getElapsedTime()
 
     // ── Ash particle drift ────────────────────────────────────────
-    ashRefs.current.forEach((group, i) => {
+    ashRefs.current.forEach((group) => {
       if (!group) return
       group.children.forEach((particle, j) => {
         particle.position.x += 0.015
@@ -293,6 +300,7 @@ export default function BiomeEmber({ origin, isDark = true, charPosRef, cliffEdg
 
       {/* ── Lava glow from rivers ── */}
       {props.emberVeins.map((v, i) => (
+        (!isLowQuality || i < 6) && (
         <EmberVein
           key={`ember-vein-${i}`}
           position={v.position}
@@ -300,9 +308,11 @@ export default function BiomeEmber({ origin, isDark = true, charPosRef, cliffEdg
           charPosRef={charPosRef}
           isDarkRef={isDarkRef}
         />
+        )
       ))}
 
       {props.lavaRivers.map((r, i) => (
+        (!isLowQuality || i < 3) && (
         <pointLight key={`lavaglow-${i}`}
           position={[r.position[0], 0.5, r.position[2]]}
           color="#ff3300"
@@ -310,20 +320,26 @@ export default function BiomeEmber({ origin, isDark = true, charPosRef, cliffEdg
           distance={16}
           decay={2}
         />
+        )
       ))}
 
       {/* ── Obsidian spires ── */}
       {props.spires.map((s, i) => (
+        (!isLowQuality || i < 16) && (!isMediumQuality || i < 22) && (
         <ObsidianSpire key={`spire-${i}`} {...s} />
+        )
       ))}
 
       {/* ── Geysers ── */}
       {props.geysers.map((g, i) => (
-        <Geyser key={`geyser-${i}`} position={g.position} isDarkRef={isDarkRef} />
+        (!isLowQuality || i < 4) && (!isMediumQuality || i < 6) && (
+        <Geyser key={`geyser-${i}`} position={g.position} />
+        )
       ))}
 
       {/* ── Fire columns ── */}
       {props.fireColumns.map((fc, i) => (
+        (!isLowQuality || i < 2) && (
         <group key={`fire-${i}`} position={fc.position}>
           {Array.from({ length: 4 }, (_, j) => (
             <mesh key={j} position={[0, j * 1.2 + 0.5, 0]}>
@@ -338,22 +354,26 @@ export default function BiomeEmber({ origin, isDark = true, charPosRef, cliffEdg
           ))}
           <pointLight color="#ff4400" intensity={isDark ? 6.5 : 2} distance={20} decay={2} />
         </group>
+        )
       ))}
 
       {/* ── Ash particles (sideways drift) ── */}
       {props.ashStreams.map((ash, i) => (
+        (!isLowQuality || i < 6) && (!isMediumQuality || i < 9) && (
         <group key={`ash-${i}`} ref={el => { ashRefs.current[i] = el }} position={ash.position}>
-          {Array.from({ length: 12 }, (_, j) => (
+          {Array.from({ length: isLowQuality ? 6 : isMediumQuality ? 8 : 12 }, (_, j) => (
             <mesh key={j} position={[(Math.random() - 0.5) * 16, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 3]}>
               <sphereGeometry args={[0.03 + Math.random() * 0.05, 4, 3]} />
               <meshBasicMaterial color="#402020" transparent opacity={0.3} depthWrite={false} />
             </mesh>
           ))}
         </group>
+        )
       ))}
 
       {/* ── Background boulders ── */}
       {props.bgBoulders.map((b, i) => (
+        (!isLowQuality || i < 9) && (
         <mesh key={`boulder-${i}`} position={b.position} scale={b.scale}>
           <dodecahedronGeometry args={[0.5, 0]} />
           <meshStandardMaterial
@@ -365,11 +385,12 @@ export default function BiomeEmber({ origin, isDark = true, charPosRef, cliffEdg
             flatShading
           />
         </mesh>
+        )
       ))}
 
       {/* ── Ember/cinder sparkles rising ── */}
       <Sparkles
-        count={isDark ? 120 : 60}
+        count={isLowQuality ? (isDark ? 44 : 24) : isMediumQuality ? (isDark ? 78 : 40) : (isDark ? 120 : 60)}
         scale={[48, 14, Math.max(18, emberDepth)]}
         position={[ox, 4, emberCenterZ]}
         size={isDark ? 3 : 2}
@@ -378,7 +399,7 @@ export default function BiomeEmber({ origin, isDark = true, charPosRef, cliffEdg
         opacity={isDark ? 0.88 : 0.5}
       />
       <Sparkles
-        count={45}
+        count={isLowQuality ? 18 : isMediumQuality ? 28 : 45}
         scale={[30, 4, Math.max(16, emberDepth - 4)]}
         position={[ox, 0.5, emberCenterZ]}
         size={1.5}
