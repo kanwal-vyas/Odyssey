@@ -661,8 +661,18 @@
 
   .hud-map-panel {
     width: min(16rem, calc(100vw - 1.25rem));
-    padding: 0.75rem 0.78rem 0.82rem;
+    padding: 0.6rem;
     right: 0;
+  }
+
+  .hud-map-panel::before {
+    inset: 0.28rem;
+  }
+
+  .hud-map-header,
+  .hud-map-legend,
+  .hud-map-current {
+    display: none;
   }
 
   .hud-map-scene {
@@ -694,26 +704,10 @@
 
   .hud-map-panel {
     width: min(13.2rem, calc(100vw - 1rem));
-    padding: 0.7rem 0.72rem 0.76rem;
+    padding: 0.48rem;
   }
 
   .hud-map-scene {
     height: 12.8rem;
-  }
-
-  .hud-map-legend {
-    grid-template-columns: 1fr;
-  }
-
-  .hud-map-legend-name {
-    font-size: 0.44rem;
-  }
-
-  .hud-map-current {
-    gap: 0.55rem;
-  }
-
-  .hud-map-current-name {
-    font-size: 0.6rem;
   }
 }
