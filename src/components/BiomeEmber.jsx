@@ -19,6 +19,53 @@ const _charPos = new THREE.Vector3()
 const _objPos  = new THREE.Vector3()
 const EMBER_REVEAL_RADIUS = 14
 const EMBER_FULL_RADIUS = 4
+const EMBER_GROWTH_REVEAL_RADIUS = 18
+const EMBER_GROWTH_FULL_RADIUS = 5
+const PATH_CLEAR_HALF_WIDTH = 1.9
+
+const EMBER_GROWTH_LAYOUT = [
+  { x: 0.0, z: 0.0, radius: 0.34, height: 2.8, rotX: 0.08, rotY: 0.00, rotZ: 0.00, color: '#ffb14f' },
+  { x: 0.76, z: -1.3, radius: 0.24, height: 2.0, rotX: 0.14, rotY: 0.16, rotZ: 0.16, color: '#ff8a38' },
+  { x: -0.78, z: -1.1, radius: 0.26, height: 2.2, rotX: 0.16, rotY: -0.18, rotZ: -0.14, color: '#ff7a2c' },
+  { x: 0.58, z: 1.4, radius: 0.22, height: 1.8, rotX: -0.10, rotY: 0.10, rotZ: 0.12, color: '#ff6420' },
+  { x: -0.52, z: 1.2, radius: 0.20, height: 1.6, rotX: -0.08, rotY: -0.12, rotZ: -0.12, color: '#ff6f24' },
+]
+
+const EMBER_GROWTH_POSITIONS = [
+  { x: -3.1, z: -14 },
+  { x: -3.4, z: -20 },
+  { x: 3.0, z: -22 },
+  { x: 3.3, z: -28 },
+  { x: -3.6, z: -30 },
+  { x: -2.9, z: -38 },
+  { x: 3.1, z: -40 },
+  { x: 3.6, z: -48 },
+  { x: -3.5, z: -50 },
+  { x: -3.2, z: -58 },
+  { x: 3.4, z: -60 },
+  { x: 2.8, z: -68 },
+  { x: -3.0, z: -72 },
+  { x: 3.2, z: -76 },
+]
+
+const EMBER_PATH_ACCENTS = [
+  { x: -2.1, z: -14, rotation: 0.12, length: 3.8, width: 0.07 },
+  { x: -2.2, z: -18, rotation: 0.18, length: 4.4, width: 0.08 },
+  { x: 2.0, z: -20, rotation: -0.10, length: 3.4, width: 0.07 },
+  { x: 2.1, z: -24, rotation: -0.16, length: 3.9, width: 0.08 },
+  { x: -2.5, z: -28, rotation: 0.14, length: 3.5, width: 0.07 },
+  { x: -2.4, z: -34, rotation: 0.12, length: 3.6, width: 0.07 },
+  { x: 2.4, z: -36, rotation: -0.08, length: 3.1, width: 0.06 },
+  { x: 2.5, z: -42, rotation: -0.14, length: 3.5, width: 0.07 },
+  { x: -2.2, z: -46, rotation: 0.10, length: 3.2, width: 0.06 },
+  { x: -2.1, z: -54, rotation: 0.16, length: 3.8, width: 0.07 },
+  { x: 2.2, z: -56, rotation: -0.16, length: 3.6, width: 0.07 },
+  { x: 2.3, z: -62, rotation: -0.10, length: 3.2, width: 0.07 },
+  { x: -2.3, z: -66, rotation: 0.12, length: 3.0, width: 0.06 },
+  { x: -2.0, z: -70, rotation: 0.08, length: 2.8, width: 0.06 },
+  { x: 2.2, z: -72, rotation: -0.12, length: 2.9, width: 0.06 },
+  { x: 2.0, z: -74, rotation: -0.06, length: 2.8, width: 0.06 },
+]
 
 let _seed3 = 131
 const erng = () => {
@@ -70,46 +117,89 @@ function Geyser({ position }) {
 }
 
 // Obsidian spire
-function ObsidianSpire({ position, height, twist }) {
+function ObsidianSpire({ position, height, twist, isDark }) {
   return (
     <group position={position} rotation={[0, twist, 0]}>
       <mesh position={[0, height / 2, 0]} rotation={[0, 0, (Math.random() - 0.5) * 0.3]}>
         <coneGeometry args={[0.15 + height * 0.06, height, 5]} />
-        <meshStandardMaterial color="#0a0508" roughness={0.05} metalness={0.9} flatShading />
+        <meshStandardMaterial
+          color={isDark ? '#26151b' : '#0a0508'}
+          roughness={0.08}
+          metalness={0.88}
+          emissive={isDark ? '#ff6420' : '#080203'}
+          emissiveIntensity={isDark ? 0.18 : 0}
+          flatShading
+        />
       </mesh>
       {/* Dark emissive base */}
       <mesh position={[0, 0.2, 0]}>
         <cylinderGeometry args={[0.3, 0.45, 0.4, 5]} />
-        <meshStandardMaterial color="#150808" roughness={0.3} emissive="#300808" emissiveIntensity={0.3} />
+        <meshStandardMaterial
+          color={isDark ? '#28100d' : '#150808'}
+          roughness={0.28}
+          emissive={isDark ? '#ff6220' : '#300808'}
+          emissiveIntensity={isDark ? 0.75 : 0.3}
+        />
       </mesh>
+      {isDark && (
+        <mesh position={[0, 0.22, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.35, 0.9, 18]} />
+          <meshBasicMaterial
+            color="#ff7a2c"
+            transparent
+            opacity={0.22}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      )}
     </group>
   )
 }
 
 // Lava river segment
-function LavaRiver({ position, width, length, rotation = 0 }) {
+function LavaRiver({ position, width, length, rotation = 0, isDark }) {
   const matRef = useRef()
+  const glowRef = useRef()
   const phase  = useRef(Math.random() * Math.PI * 2)
 
   useFrame(({ clock }) => {
     if (matRef.current) {
       const t = clock.getElapsedTime()
-      matRef.current.emissiveIntensity = 1.4 + Math.sin(t * 0.8 + phase.current) * 0.4
+      const pulse = Math.sin(t * 0.8 + phase.current)
+      matRef.current.emissiveIntensity = (isDark ? 2.5 : 1.4) + pulse * (isDark ? 0.65 : 0.4)
+      if (glowRef.current) {
+        glowRef.current.opacity = (isDark ? 0.34 : 0.16) + pulse * 0.06
+      }
     }
   })
 
   return (
-    <mesh rotation={[-Math.PI / 2, 0, rotation]} position={position}>
-      <planeGeometry args={[width, length, 4, 8]} />
-      <meshStandardMaterial
-        ref={matRef}
-        color="#ff2200"
-        emissive="#ff4400"
-        emissiveIntensity={1.4}
-        roughness={0.0}
-        metalness={0.3}
-      />
-    </mesh>
+    <group rotation={[-Math.PI / 2, 0, rotation]} position={position}>
+      <mesh>
+        <planeGeometry args={[width, length, 4, 8]} />
+        <meshStandardMaterial
+          ref={matRef}
+          color={isDark ? '#ff6a1f' : '#ff2200'}
+          emissive="#ff4400"
+          emissiveIntensity={isDark ? 2.5 : 1.4}
+          roughness={0.0}
+          metalness={0.3}
+          toneMapped={false}
+        />
+      </mesh>
+      <mesh position={[0, 0, -0.02]}>
+        <planeGeometry args={[width * (isDark ? 2.1 : 1.5), length * 1.08]} />
+        <meshBasicMaterial
+          ref={glowRef}
+          color={isDark ? '#ff6f24' : '#ff4a12'}
+          transparent
+          opacity={isDark ? 0.34 : 0.16}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
   )
 }
 
@@ -122,36 +212,154 @@ function EmberVein({ position, rotation, charPosRef, isDarkRef }) {
   useFrame(({ clock }) => {
     const dark = isDarkRef.current
     const t = clock.getElapsedTime()
-    let target = dark ? 0 : 1
+    let target = dark ? 0.18 : 1
 
     if (dark && charPosRef?.current) {
       _charPos.copy(charPosRef.current)
       _objPos.set(...position)
       const dist = _charPos.distanceTo(_objPos)
-      target = THREE.MathUtils.clamp(
-        THREE.MathUtils.inverseLerp(EMBER_REVEAL_RADIUS, EMBER_FULL_RADIUS, dist), 0, 1)
+      target = THREE.MathUtils.lerp(
+        0.18,
+        1,
+        THREE.MathUtils.clamp(
+          THREE.MathUtils.inverseLerp(EMBER_REVEAL_RADIUS, EMBER_FULL_RADIUS, dist), 0, 1,
+        ),
+      )
     }
 
     proxRef.current = THREE.MathUtils.lerp(proxRef.current, target, 0.05)
     const p = proxRef.current
     const pulse = 0.82 + Math.sin(t * 2.6 + position[2] * 0.09) * 0.18
 
-    if (matRef.current) matRef.current.opacity = dark ? THREE.MathUtils.lerp(0.04, 0.8, p) * pulse : 0.45
-    if (haloRef.current) haloRef.current.opacity = dark ? p * 0.12 * pulse : 0.04
-    if (lightRef.current) lightRef.current.intensity = dark ? p * 4.8 * pulse : 1.0
+    if (matRef.current) matRef.current.opacity = dark ? THREE.MathUtils.lerp(0.16, 0.92, p) * pulse : 0.45
+    if (haloRef.current) haloRef.current.opacity = dark ? THREE.MathUtils.lerp(0.06, 0.2, p) * pulse : 0.04
+    if (lightRef.current) lightRef.current.intensity = dark ? THREE.MathUtils.lerp(1.2, 6.2, p) * pulse : 1.0
   })
 
   return (
     <group position={position} rotation={[-Math.PI / 2, 0, rotation]}>
       <mesh>
         <planeGeometry args={[0.16, 3.2]} />
-        <meshBasicMaterial ref={matRef} color="#ff4a10" transparent opacity={0.04} depthWrite={false} />
+        <meshBasicMaterial
+          ref={matRef}
+          color="#ff7b30"
+          transparent
+          opacity={0.16}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
       <mesh position={[0, 0, -0.01]}>
         <planeGeometry args={[1.4, 4.8]} />
-        <meshBasicMaterial ref={haloRef} color="#ff2200" transparent opacity={0} depthWrite={false} />
+        <meshBasicMaterial
+          ref={haloRef}
+          color="#ff5a18"
+          transparent
+          opacity={0}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
       <pointLight ref={lightRef} position={[0, 0, 1.1]} color="#ff3a10" intensity={0} distance={15} decay={2} />
+    </group>
+  )
+}
+
+function EmberGrowthCluster({ position, charPosRef, isDarkRef }) {
+  const groupRef = useRef()
+  const spikeRefs = useRef([])
+  const lightRef = useRef()
+  const proxRef = useRef(isDarkRef.current ? 0.34 : 1)
+
+  useFrame(({ clock }) => {
+    const dark = isDarkRef.current
+    const t = clock.getElapsedTime()
+    let target = dark ? 0.34 : 1
+
+    if (dark && charPosRef?.current) {
+      _charPos.copy(charPosRef.current)
+      _objPos.set(...position)
+      const dist = _charPos.distanceTo(_objPos)
+      target = THREE.MathUtils.lerp(
+        0.34,
+        1,
+        THREE.MathUtils.clamp(
+          THREE.MathUtils.inverseLerp(EMBER_GROWTH_REVEAL_RADIUS, EMBER_GROWTH_FULL_RADIUS, dist), 0, 1,
+        ),
+      )
+    }
+
+    proxRef.current = THREE.MathUtils.lerp(proxRef.current, target, 0.06)
+    const growth = proxRef.current
+    const pulse = 0.94 + Math.sin(t * 2.1 + position[2] * 0.025) * 0.06
+
+    if (groupRef.current) {
+      groupRef.current.position.y = 0.02 + Math.sin(t * 1.2 + position[2] * 0.015) * 0.05
+    }
+
+    spikeRefs.current.forEach((spike, i) => {
+      if (!spike) return
+      const wave = 0.92 + Math.sin(t * 2.8 + i * 0.85) * 0.12
+      const width = THREE.MathUtils.lerp(0.55, 1.18 + i * 0.06, growth) * wave
+      const height = THREE.MathUtils.lerp(0.32, 1.42 + i * 0.08, growth) * wave
+      spike.scale.set(width, height, width)
+    })
+
+    if (lightRef.current) {
+      lightRef.current.intensity = THREE.MathUtils.lerp(1.4, 6.8, growth) * pulse
+    }
+  })
+
+  return (
+    <group ref={groupRef} position={position}>
+      <mesh position={[0, 0.14, 0]}>
+        <cylinderGeometry args={[0.5, 0.72, 0.24, 7]} />
+        <meshStandardMaterial
+          color="#1c0906"
+          roughness={0.92}
+          emissive={isDarkRef.current ? '#501607' : '#140606'}
+          emissiveIntensity={isDarkRef.current ? 0.42 : 0.1}
+        />
+      </mesh>
+
+      {EMBER_GROWTH_LAYOUT.map((item, i) => (
+        <group
+          key={`growth-spike-${i}`}
+          ref={(el) => { spikeRefs.current[i] = el }}
+          position={[item.x, 0.12, item.z]}
+          rotation={[item.rotX, item.rotY, item.rotZ]}
+        >
+          <mesh position={[0, item.height / 2, 0]}>
+            <coneGeometry args={[item.radius, item.height, 6]} />
+            <meshStandardMaterial
+              color={item.color}
+              emissive={item.color}
+              emissiveIntensity={isDarkRef.current ? 2.1 : 0.8}
+              roughness={0.22}
+              metalness={0.08}
+            />
+          </mesh>
+          <mesh position={[0, item.height * 0.62, 0]}>
+            <sphereGeometry args={[item.radius * 0.7, 8, 7]} />
+            <meshBasicMaterial
+              color={item.color}
+              transparent
+              opacity={isDarkRef.current ? 0.3 : 0.18}
+              depthWrite={false}
+              toneMapped={false}
+            />
+          </mesh>
+        </group>
+      ))}
+
+      <pointLight
+        ref={lightRef}
+        position={[0, 1.8, 0]}
+        color="#ff7a2c"
+        intensity={0}
+        distance={20}
+        decay={2}
+      />
     </group>
   )
 }
@@ -226,9 +434,22 @@ export default function BiomeEmber({
       { position: [ox + 15, 0, oz - 62] },
     ]
 
-    const emberVeins = Array.from({ length: 10 }, (_, i) => ({
-      position: [ox + Math.sin(i * 1.4) * 1.1, 0.075, oz - 4 - i * 6.4],
-      rotation: Math.sin(i * 2.1) * 0.16,
+    const emberVeins = EMBER_PATH_ACCENTS.map((accent) => ({
+      position: [ox + accent.x, 0.075, oz + accent.z],
+      rotation: accent.rotation,
+    }))
+
+    const pathCracks = EMBER_PATH_ACCENTS.map((accent, index) => ({
+      index,
+      position: [ox + accent.x, 0.02, oz + accent.z],
+      rotation: accent.rotation,
+      width: accent.width,
+      length: accent.length,
+    }))
+
+    const growthClusters = EMBER_GROWTH_POSITIONS.map((cluster, index) => ({
+      index,
+      position: [ox + cluster.x, 0, oz + cluster.z],
     }))
 
     const trimmedRivers = lavaRivers
@@ -247,6 +468,8 @@ export default function BiomeEmber({
       bgBoulders: bgBoulders.filter((b) => b.position[2] >= cliffEdgeZ + 6),
       fireColumns: fireColumns.filter((f) => f.position[2] >= cliffEdgeZ + 6),
       emberVeins: emberVeins.filter((v) => v.position[2] >= cliffEdgeZ + 3),
+      pathCracks: pathCracks.filter((crack) => crack.position[2] >= cliffEdgeZ + 2),
+      growthClusters: growthClusters.filter((cluster) => cluster.position[2] >= cliffEdgeZ + 4),
     }
   }, [cliffEdgeZ, ox, oz])
 
@@ -267,7 +490,7 @@ export default function BiomeEmber({
     // ── Rock emissive pulse ───────────────────────────────────────
     rockMatRefs.current.forEach((mat, i) => {
       if (!mat) return
-      mat.emissiveIntensity = 0.1 + Math.sin(t * 0.5 + i * 0.7) * 0.08
+      mat.emissiveIntensity = (isDark ? 0.24 : 0.1) + Math.sin(t * 0.5 + i * 0.7) * (isDark ? 0.12 : 0.08)
     })
   })
 
@@ -276,34 +499,60 @@ export default function BiomeEmber({
       {/* ── Scorched ground ── */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[ox, 0, emberCenterZ]}>
         <planeGeometry args={[80, emberDepth]} />
-        <meshStandardMaterial color={isDark ? '#0a0402' : '#140804'} roughness={1} />
+        <meshStandardMaterial
+          color={isDark ? '#1a0804' : '#140804'}
+          roughness={1}
+        />
       </mesh>
 
+      {props.growthClusters.map((cluster, i) => (
+        (!isLowQuality || i < 8) && (!isMediumQuality || i < 12) && (
+        <EmberGrowthCluster
+          key={`growth-cluster-${cluster.index}`}
+          position={cluster.position}
+          charPosRef={charPosRef}
+          isDarkRef={isDarkRef}
+        />
+        )
+      ))}
+
       {/* ── Cracked ground pattern ── */}
-      {Array.from({ length: 18 }, (_, i) => ({
-        index: i,
-        z: oz - 15 - i * 3.5,
-      }))
-        .filter((crack) => crack.z >= cliffEdgeZ + 2)
-        .map((crack) => (
-          <mesh key={`crack-${crack.index}`} rotation={[-Math.PI / 2, crack.index * 0.5, 0]}
-            position={[ox + (crack.index - 9) * 4.5, 0.02, crack.z]}>
-            <planeGeometry args={[0.08, 6 + Math.sin(crack.index) * 2]} />
-            <meshBasicMaterial color="#ff2200" transparent opacity={0.4} depthWrite={false} />
-          </mesh>
-        ))}
+      {props.pathCracks.map((crack, i) => (
+        (!isLowQuality || i < 10) && (!isMediumQuality || i < 14) && (
+        <mesh
+          key={`crack-${crack.index}`}
+          rotation={[-Math.PI / 2, crack.rotation, 0]}
+          position={crack.position}
+        >
+          <planeGeometry args={[crack.width, crack.length]} />
+          <meshBasicMaterial
+            color={isDark ? '#ff7a2b' : '#ff2200'}
+            transparent
+            opacity={isDark ? 0.72 : 0.4}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+        )
+      ))}
 
       {/* ── Lava rivers ── */}
       {props.lavaRivers.map((r, i) => (
-        <LavaRiver key={`lava-${i}`} {...r} />
+        <LavaRiver key={`lava-${i}`} {...r} isDark={isDark} />
       ))}
 
       {/* ── Lava glow from rivers ── */}
       {props.emberVeins.map((v, i) => (
-        (!isLowQuality || i < 6) && (
+        (!isLowQuality || i < 10) && (!isMediumQuality || i < 14) && (
         <EmberVein
           key={`ember-vein-${i}`}
-          position={v.position}
+          position={[
+            v.position[0] < ox
+              ? Math.min(v.position[0], ox - PATH_CLEAR_HALF_WIDTH)
+              : Math.max(v.position[0], ox + PATH_CLEAR_HALF_WIDTH),
+            v.position[1],
+            v.position[2],
+          ]}
           rotation={v.rotation}
           charPosRef={charPosRef}
           isDarkRef={isDarkRef}
@@ -326,7 +575,7 @@ export default function BiomeEmber({
       {/* ── Obsidian spires ── */}
       {props.spires.map((s, i) => (
         (!isLowQuality || i < 16) && (!isMediumQuality || i < 22) && (
-        <ObsidianSpire key={`spire-${i}`} {...s} />
+        <ObsidianSpire key={`spire-${i}`} {...s} isDark={isDark} />
         )
       ))}
 
@@ -364,7 +613,13 @@ export default function BiomeEmber({
           {Array.from({ length: isLowQuality ? 6 : isMediumQuality ? 8 : 12 }, (_, j) => (
             <mesh key={j} position={[(Math.random() - 0.5) * 16, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 3]}>
               <sphereGeometry args={[0.03 + Math.random() * 0.05, 4, 3]} />
-              <meshBasicMaterial color="#402020" transparent opacity={0.3} depthWrite={false} />
+              <meshBasicMaterial
+                color={isDark ? '#ff9a63' : '#402020'}
+                transparent
+                opacity={isDark ? 0.44 : 0.3}
+                depthWrite={false}
+                toneMapped={false}
+              />
             </mesh>
           ))}
         </group>
@@ -378,10 +633,10 @@ export default function BiomeEmber({
           <dodecahedronGeometry args={[0.5, 0]} />
           <meshStandardMaterial
             ref={el => { rockMatRefs.current[i] = el }}
-            color="#150808"
+            color={isDark ? '#2c110b' : '#150808'}
             roughness={0.85}
             emissive="#ff1100"
-            emissiveIntensity={0.1}
+            emissiveIntensity={isDark ? 0.24 : 0.1}
             flatShading
           />
         </mesh>
@@ -441,18 +696,17 @@ export default function BiomeEmber({
       <pointLight position={[ox - 27, 27, cliffEdgeZ - 10]} color="#ff5a14" intensity={isDark ? 10 : 3} distance={60} decay={1} />
 
       {/* ── Sky haze planes ── */}
-      {Array.from({ length: 5 }, (_, i) => (
-        <mesh key={`haze-${i}`} rotation={[-Math.PI / 2, 0, 0]}
-          position={[ox + (i - 2) * 8, 0.12, oz - 18 - i * 10]}>
-          <planeGeometry args={[16, 14]} />
-          <meshBasicMaterial color="#300808" transparent opacity={0.08} depthWrite={false} />
-        </mesh>
-      ))}
 
       {/* ── Scene fill lights ── */}
-      <pointLight position={[ox, 4, oz - 25]} color="#ff2200" intensity={isDark ? 6.2 : 3} distance={45} />
-      <pointLight position={[ox - 10, 2, oz - 45]} color="#ff4400" intensity={isDark ? 4 : 1.5} distance={35} />
-      <pointLight position={[ox + 12, 3, oz - 55]} color="#ff1100" intensity={isDark ? 4 : 1.5} distance={35} />
+      <pointLight position={[ox, 4, oz - 25]} color="#ff2200" intensity={isDark ? 8.5 : 3} distance={54} />
+      <pointLight position={[ox - 10, 2, oz - 45]} color="#ff6a24" intensity={isDark ? 5.6 : 1.5} distance={42} />
+      <pointLight position={[ox + 12, 3, oz - 55]} color="#ff3a14" intensity={isDark ? 5.4 : 1.5} distance={42} />
+      {isDark && (
+        <>
+          <pointLight position={[ox, 8, emberCenterZ]} color="#ff8e42" intensity={2.6} distance={72} decay={2} />
+          <pointLight position={[ox - 20, 6, cliffEdgeZ - 4]} color="#ffb36d" intensity={2.2} distance={60} decay={2} />
+        </>
+      )}
     </group>
   )
 }
