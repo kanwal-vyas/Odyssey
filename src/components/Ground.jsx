@@ -1,7 +1,7 @@
 export default function Ground({ isDark = true, totalDepth = 480 }) {
   const groundColor = isDark ? '#050402' : '#1a1408'
-  const pathColor   = isDark ? '#101214ab' : '#2a2010c2'
-  const pathGlowColor = '#80ffaa6c'
+  const pathColor   = isDark ? '#101214' : '#2a2010'
+  const pathGlowColor = '#80ffaa'
   const frontPadding = 12
   const groundDepth = totalDepth + frontPadding
   const centerZ = -((totalDepth - frontPadding) / 2)
@@ -17,8 +17,10 @@ export default function Ground({ isDark = true, totalDepth = 480 }) {
         <meshStandardMaterial
           color={pathColor}
           roughness={1}
+          transparent={isDark}
+          opacity={isDark ? 0.67 : 0.76}
           emissive={isDark ? pathGlowColor : '#000000'}
-          emissiveIntensity={isDark ? 0.005 : 0}
+          emissiveIntensity={isDark ? 0.03 : 0}
         />
       </mesh>
       {isDark && (
