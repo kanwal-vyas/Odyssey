@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { BIOMES } from '../World'
 import { applyTheme } from '../hooks/useTheme'
+import MiniMap from './MiniMap'
 
 function ThemeTogglePill({ theme, onToggle }) {
   const isDark = theme === 'dark'
@@ -77,16 +78,27 @@ function MusicToggle({ musicOn, onToggle }) {
 }
 
 function BiomeCompass({ activeBiome, compact = false }) {
-  const b = BIOMES[activeBiome]
-  if (!b) return null
+  const biome = BIOMES[activeBiome]
+  if (!biome) return null
+
   return (
     <div className="hud-biome-compass">
-      {compact ? b.name : `${b.roman} - ${b.name}`}
+      {compact ? biome.name : `${biome.roman} - ${biome.name}`}
     </div>
   )
 }
 
-export default function HUD({ zoneRefs, theme, setTheme, musicOn, onMusicToggle, activeBiome, onSelectBiome }) {
+export default function HUD({
+  zoneRefs,
+  theme,
+  setTheme,
+  musicOn,
+  onMusicToggle,
+  activeBiome,
+  onSelectBiome,
+  progressRef,
+  charPosRef,
+}) {
   const navRef = useRef(null)
   const [isMobileLayout, setIsMobileLayout] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -164,6 +176,11 @@ export default function HUD({ zoneRefs, theme, setTheme, musicOn, onMusicToggle,
       <div className="hud-actions">
         <ThemeTogglePill theme={theme} onToggle={handleThemeToggle} />
         <MusicToggle musicOn={musicOn} onToggle={onMusicToggle} />
+        <MiniMap
+          activeBiome={activeBiome}
+          progressRef={progressRef}
+          charPosRef={charPosRef}
+        />
       </div>
 
       <aside
@@ -180,17 +197,17 @@ export default function HUD({ zoneRefs, theme, setTheme, musicOn, onMusicToggle,
         }}
       >
         <nav className="hud-biome-list" aria-label="World zones">
-          {BIOMES.map((b, i) => (
+          {BIOMES.map((biome, index) => (
             <button
-              key={i}
+              key={index}
               type="button"
-              className={`hud-zone${i === activeBiome ? ' active' : ''}`}
-              data-index={i}
-              onClick={() => handleZonePress(i)}
-              ref={el => { zoneRefs.current[i] = el }}
+              className={`hud-zone${index === activeBiome ? ' active' : ''}`}
+              data-index={index}
+              onClick={() => handleZonePress(index)}
+              ref={el => { zoneRefs.current[index] = el }}
             >
-              <span className="hud-zone-name">{b.name}</span>
-              <span className="hud-zone-roman">{b.roman}</span>
+              <span className="hud-zone-name">{biome.name}</span>
+              <span className="hud-zone-roman">{biome.roman}</span>
               <span className="hud-zone-dot" aria-hidden="true" />
             </button>
           ))}

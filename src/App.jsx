@@ -223,6 +223,8 @@ export default function App() {
         onMusicToggle={handleMusicToggle}
         activeBiome={activeBiome}
         onSelectBiome={handleSelectBiome}
+        progressRef={progressRef}
+        charPosRef={charPosRef}
       />
 
       {!showIntro && (
