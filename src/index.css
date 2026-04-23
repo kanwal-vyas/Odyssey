@@ -385,13 +385,28 @@ html, body {
 
   .hud-theme-toggle,
   .hud-music-toggle {
-    padding: 0.24rem 0.42rem 0.24rem 0.32rem;
     transform-origin: top right;
   }
 
+  .hud-theme-toggle {
+    gap: 0.36rem;
+    padding: 0.2rem 0.32rem 0.2rem 0.26rem;
+  }
+
+  .toggle-track {
+    width: 24px;
+    height: 12px;
+  }
+
+  .toggle-thumb {
+    left: 2px;
+    width: 7px;
+    height: 7px;
+  }
+
   .hud-theme-label {
-    font-size: 0.46rem;
-    letter-spacing: 0.05em;
+    font-size: 0.42rem;
+    letter-spacing: 0.04em;
   }
 
   .hud-nav {
@@ -514,12 +529,26 @@ html, body {
 
   .hud-theme-toggle,
   .hud-music-toggle {
-    padding: 0.22rem 0.34rem 0.22rem 0.28rem;
+    padding: 0.18rem 0.28rem 0.18rem 0.24rem;
   }
 
   .hud-theme-label,
   .hud-music-toggle span:last-child {
-    font-size: 0.42rem;
+    font-size: 0.4rem;
+  }
+
+  .hud-theme-toggle {
+    gap: 0.3rem;
+  }
+
+  .toggle-track {
+    width: 22px;
+    height: 11px;
+  }
+
+  .toggle-thumb {
+    width: 6px;
+    height: 6px;
   }
 
   .hud-nav {

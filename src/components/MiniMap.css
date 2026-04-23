@@ -649,14 +649,29 @@
   .hud-theme-toggle,
   .hud-music-toggle,
   .hud-map-toggle {
-    padding: 0.24rem 0.42rem 0.24rem 0.32rem;
     transform-origin: top right;
+  }
+
+  .hud-map-toggle {
+    gap: 0.34rem;
+    padding: 0.2rem 0.32rem 0.2rem 0.26rem;
+  }
+
+  .hud-map-toggle-icon {
+    grid-template-columns: repeat(2, 4px);
+    grid-template-rows: repeat(2, 4px);
+    gap: 1.5px;
+  }
+
+  .hud-map-toggle-icon span {
+    width: 4px;
+    height: 4px;
   }
 
   .hud-theme-label,
   .hud-map-toggle-label {
-    font-size: 0.46rem;
-    letter-spacing: 0.05em;
+    font-size: 0.42rem;
+    letter-spacing: 0.04em;
   }
 
   .hud-map-panel {
@@ -693,13 +708,28 @@
   .hud-theme-toggle,
   .hud-music-toggle,
   .hud-map-toggle {
-    padding: 0.22rem 0.34rem 0.22rem 0.28rem;
+    padding: 0.18rem 0.28rem 0.18rem 0.24rem;
   }
 
   .hud-theme-label,
   .hud-music-toggle span:last-child,
   .hud-map-toggle-label {
-    font-size: 0.42rem;
+    font-size: 0.4rem;
+  }
+
+  .hud-map-toggle {
+    gap: 0.28rem;
+  }
+
+  .hud-map-toggle-icon {
+    grid-template-columns: repeat(2, 3.5px);
+    grid-template-rows: repeat(2, 3.5px);
+    gap: 1px;
+  }
+
+  .hud-map-toggle-icon span {
+    width: 3.5px;
+    height: 3.5px;
   }
 
   .hud-map-panel {

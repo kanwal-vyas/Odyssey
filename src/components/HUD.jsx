@@ -3,8 +3,9 @@ import { BIOMES } from '../World'
 import { applyTheme } from '../hooks/useTheme'
 import MiniMap from './MiniMap'
 
-function ThemeTogglePill({ theme, onToggle }) {
+function ThemeTogglePill({ theme, onToggle, compact = false, small = false }) {
   const isDark = theme === 'dark'
+  const thumbTravel = compact ? (small ? 10 : 12) : 14
   return (
     <button
       className="hud-theme-toggle"
@@ -13,7 +14,7 @@ function ThemeTogglePill({ theme, onToggle }) {
     >
       <span className="toggle-track" aria-hidden="true">
         <span className="toggle-thumb" style={{
-          transform: isDark ? 'translate(14px, -50%)' : 'translate(0, -50%)',
+          transform: isDark ? `translate(${thumbTravel}px, -50%)` : 'translate(0, -50%)',
         }} />
       </span>
       <span className="hud-theme-label">
@@ -23,7 +24,16 @@ function ThemeTogglePill({ theme, onToggle }) {
   )
 }
 
-function MusicToggle({ musicOn, onToggle }) {
+function MusicToggle({ musicOn, onToggle, compact = false, small = false }) {
+  const buttonGap = compact ? '0.34rem' : '0.5rem'
+  const buttonPadding = compact
+    ? (small ? '0.18rem 0.28rem 0.18rem 0.24rem' : '0.2rem 0.32rem 0.2rem 0.26rem')
+    : '0.35rem 0.7rem 0.35rem 0.5rem'
+  const barHeight = compact ? (small ? 11 : 12) : 14
+  const barWidth = compact ? '2px' : '3px'
+  const idleBarHeight = compact ? '3px' : '4px'
+  const labelFontSize = compact ? (small ? '0.4rem' : '0.44rem') : '0.58rem'
+
   return (
     <button
       className="hud-music-toggle"
@@ -32,22 +42,22 @@ function MusicToggle({ musicOn, onToggle }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '0.5rem',
+        gap: buttonGap,
         background: musicOn ? 'rgba(60,180,110,0.15)' : 'var(--btn-bg)',
         border: `1px solid ${musicOn ? 'rgba(60,180,110,0.5)' : 'var(--btn-border)'}`,
         borderRadius: '6px',
-        padding: '0.35rem 0.7rem 0.35rem 0.5rem',
+        padding: buttonPadding,
         cursor: 'pointer',
         backdropFilter: 'blur(8px)',
         transition: 'all 0.3s ease',
         boxShadow: musicOn ? '0 0 14px rgba(60,180,110,0.3)' : 'none',
       }}
     >
-      <span style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '14px' }}>
+      <span style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: `${barHeight}px` }}>
         {[1, 0.6, 0.85, 0.4, 0.7].map((h, i) => (
           <span key={i} style={{
-            width: '3px',
-            height: musicOn ? `${h * 14}px` : '4px',
+            width: barWidth,
+            height: musicOn ? `${h * barHeight}px` : idleBarHeight,
             background: musicOn ? 'var(--accent)' : 'var(--text-muted)',
             borderRadius: '1px',
             transition: `height ${0.2 + i * 0.08}s ease`,
@@ -57,7 +67,7 @@ function MusicToggle({ musicOn, onToggle }) {
       </span>
       <span style={{
         fontFamily: 'var(--font-sans)',
-        fontSize: '0.58rem',
+        fontSize: labelFontSize,
         fontWeight: 500,
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
@@ -69,8 +79,8 @@ function MusicToggle({ musicOn, onToggle }) {
       </span>
       <style>{`
         @keyframes eq-bar {
-          from { height: 4px; }
-          to   { height: 14px; }
+          from { height: ${idleBarHeight}; }
+          to   { height: ${barHeight}px; }
         }
       `}</style>
     </button>
@@ -101,6 +111,7 @@ export default function HUD({
 }) {
   const navRef = useRef(null)
   const [isMobileLayout, setIsMobileLayout] = useState(false)
+  const [isSmallMobileLayout, setIsSmallMobileLayout] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [desktopNavOpen, setDesktopNavOpen] = useState(false)
   const [desktopHoverSuppressed, setDesktopHoverSuppressed] = useState(false)
@@ -108,7 +119,9 @@ export default function HUD({
   useEffect(() => {
     const updateLayout = () => {
       const nextMobile = window.matchMedia('(max-width: 860px), (pointer: coarse)').matches
+      const nextSmallMobile = window.matchMedia('(max-width: 420px), (pointer: coarse)').matches
       setIsMobileLayout(nextMobile)
+      setIsSmallMobileLayout(nextSmallMobile)
       if (nextMobile) {
         setDesktopNavOpen(false)
         setDesktopHoverSuppressed(false)
@@ -174,8 +187,18 @@ export default function HUD({
       </div>
 
       <div className="hud-actions">
-        <ThemeTogglePill theme={theme} onToggle={handleThemeToggle} />
-        <MusicToggle musicOn={musicOn} onToggle={onMusicToggle} />
+        <ThemeTogglePill
+          theme={theme}
+          onToggle={handleThemeToggle}
+          compact={isMobileLayout}
+          small={isSmallMobileLayout}
+        />
+        <MusicToggle
+          musicOn={musicOn}
+          onToggle={onMusicToggle}
+          compact={isMobileLayout}
+          small={isSmallMobileLayout}
+        />
         <MiniMap
           activeBiome={activeBiome}
           progressRef={progressRef}

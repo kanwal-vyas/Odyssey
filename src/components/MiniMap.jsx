@@ -548,6 +548,7 @@ function MiniMapPanel({ activeBiome, progress, playerX, playerZ, routePath }) {
 export default function MiniMap({ activeBiome, progressRef, charPosRef }) {
   const mapRef = useRef(null)
   const [mapOpen, setMapOpen] = useState(false)
+  const [mobilePersistentOpen, setMobilePersistentOpen] = useState(false)
   const [mapState, setMapState] = useState({
     progress: 0,
     playerX: 0,
@@ -556,7 +557,17 @@ export default function MiniMap({ activeBiome, progressRef, charPosRef }) {
   const routePath = useMemo(() => buildRoutePath(MAP_ROUTE_POINTS), [])
 
   useEffect(() => {
-    if (!mapOpen) return
+    const updateLayoutMode = () => {
+      setMobilePersistentOpen(window.matchMedia('(max-width: 860px), (pointer: coarse)').matches)
+    }
+
+    updateLayoutMode()
+    window.addEventListener('resize', updateLayoutMode)
+    return () => window.removeEventListener('resize', updateLayoutMode)
+  }, [])
+
+  useEffect(() => {
+    if (!mapOpen || mobilePersistentOpen) return
 
     const handlePointerDown = (event) => {
       if (!mapRef.current?.contains(event.target)) {
@@ -566,7 +577,7 @@ export default function MiniMap({ activeBiome, progressRef, charPosRef }) {
 
     document.addEventListener('pointerdown', handlePointerDown)
     return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [mapOpen])
+  }, [mapOpen, mobilePersistentOpen])
 
   useEffect(() => {
     let rafId = null
