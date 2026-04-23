@@ -7,6 +7,9 @@ import Character from '../components/Character'
 // import is a no-op in demand mode; you must call the invalidate returned by useThree().
 
 const SPEED = 6.5
+const TOUCH_BACKWARD_THRESHOLD = -0.55
+const TOUCH_TURN_ASSIST_THRESHOLD = 0.35
+const TOUCH_ROTATION_LERP = 0.1
 
 function CharacterGlow({ isDark }) {
   if (!isDark) return null
@@ -61,35 +64,74 @@ export default function FreeController({
     const keyboardDz = (k['KeyW'] || k['ArrowUp']    ? 1 : 0) - (k['KeyS'] || k['ArrowDown']  ? 1 : 0)
     const touchDx = virtualInputRef?.current?.dx ?? 0
     const touchDz = virtualInputRef?.current?.dz ?? 0
-    const dx = THREE.MathUtils.clamp(keyboardDx + touchDx, -1, 1)
-    const dz = THREE.MathUtils.clamp(keyboardDz + touchDz, -1, 1)
+    const touchMagnitude = Math.hypot(touchDx, touchDz)
+    const hasTouchInput = touchMagnitude > 0.01
+    const dx = THREE.MathUtils.clamp(keyboardDx, -1, 1)
+    const dz = THREE.MathUtils.clamp(keyboardDz, -1, 1)
     const moving = Math.abs(dx) > 0.01 || Math.abs(dz) > 0.01
+      || hasTouchInput
     if (movingState.current !== moving) {
       movingState.current = moving
       setIsMoving(moving)
     }
 
     if (moving) {
-      camera.getWorldDirection(_camDir.current)
-      _camDir.current.y = 0
-      _camDir.current.normalize()
-      _camRight.current.crossVectors(_up.current, _camDir.current).normalize()
       _move.current.set(0, 0, 0)
-      _move.current.addScaledVector(_camDir.current, dz * SPEED)
-      _move.current.addScaledVector(_camRight.current, dx * SPEED)
+
+      if (hasTouchInput) {
+        _faceMove.current.set(
+          Math.sin(charRotYRef.current),
+          0,
+          Math.cos(charRotYRef.current),
+        ).normalize()
+        _camRight.current.set(
+          _faceMove.current.z,
+          0,
+          -_faceMove.current.x,
+        ).normalize()
+
+        const isDirectReverse =
+          touchDz < TOUCH_BACKWARD_THRESHOLD &&
+          Math.abs(touchDx) < TOUCH_TURN_ASSIST_THRESHOLD
+
+        if (isDirectReverse) {
+          _move.current.addScaledVector(_faceMove.current, touchDz * SPEED)
+        } else {
+          _move.current
+            .addScaledVector(_faceMove.current, touchDz)
+            .addScaledVector(_camRight.current, touchDx)
+
+          if (_move.current.lengthSq() > 0.0001) {
+            _move.current.normalize().multiplyScalar(touchMagnitude * SPEED)
+            const targetAngle = Math.atan2(_move.current.x, _move.current.z)
+            let angleDelta = targetAngle - charRotYRef.current
+            while (angleDelta > Math.PI) angleDelta -= Math.PI * 2
+            while (angleDelta < -Math.PI) angleDelta += Math.PI * 2
+            charRotYRef.current += angleDelta * TOUCH_ROTATION_LERP
+          }
+        }
+      } else {
+        camera.getWorldDirection(_camDir.current)
+        _camDir.current.y = 0
+        _camDir.current.normalize()
+        _camRight.current.crossVectors(_up.current, _camDir.current).normalize()
+        _move.current.addScaledVector(_camDir.current, dz * SPEED)
+        _move.current.addScaledVector(_camRight.current, dx * SPEED)
+
+        if (_move.current.lengthSq() > 0.001) {
+          const targetAngle = Math.atan2(_move.current.x, _move.current.z)
+          let angleDelta = targetAngle - charRotYRef.current
+          while (angleDelta > Math.PI)  angleDelta -= Math.PI * 2
+          while (angleDelta < -Math.PI) angleDelta += Math.PI * 2
+          charRotYRef.current += angleDelta * 0.15
+        }
+      }
+
       charPosRef.current.addScaledVector(_move.current, delta)
 
       // Clamp to world bounds
       charPosRef.current.z = Math.max(-totalDepth, Math.min(12, charPosRef.current.z))
       charPosRef.current.x = Math.max(-30, Math.min(30, charPosRef.current.x))
-
-      if (_move.current.lengthSq() > 0.001) {
-        const targetAngle = Math.atan2(_move.current.x, _move.current.z)
-        let delta = targetAngle - charRotYRef.current
-        while (delta > Math.PI)  delta -= Math.PI * 2
-        while (delta < -Math.PI) delta += Math.PI * 2
-        charRotYRef.current += delta * 0.15
-      }
     }
 
     if (charRef.current) {

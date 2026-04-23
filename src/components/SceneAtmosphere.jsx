@@ -28,7 +28,7 @@ const BIOMES = [
   {
     name: 'The Ember Wastes', roman: 'IV',
     light: { bg: '#1a0802', fog: '#100401', fogNear: 12, fogFar: 45,  ambColor: '#3a1808', ambInt: 0.6 },
-    dark:  { bg: '#060200', fog: '#040100', fogNear: 8,  fogFar: 35,  ambColor: '#180800', ambInt: 0.06 },
+    dark:  { bg: '#110301', fog: '#180502', fogNear: 10, fogFar: 42,  ambColor: '#5a2310', ambInt: 0.18 },
   },
 ]
 
