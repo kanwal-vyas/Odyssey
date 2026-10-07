@@ -1,5 +1,6 @@
 # ODYSSEY — Scroll-based 3D World
-https://odyssey-b9e.pages.dev/
+[Website](https://odyssey-b9e.pages.dev/)
+
 A React + Vite + Three.js scroll-driven 3D scene with 4 biomes and StringTune integration.
 
 ## Quick Start
